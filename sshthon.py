@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import os
-from os.path import expanduser
 import glob
-from time import gmtime, strftime
-
 import json
+
+from os.path import expanduser
+from time import gmtime, strftime
 from gi.repository import Gtk, Vte, GLib, Gdk
 
 SSHTHON_DIR = expanduser("~")+"/.sshthon"
@@ -14,18 +14,28 @@ class sshthonWindow(Gtk.Window):
 		Gtk.Window.__init__(self, title="sshThon")
 		self.set_border_width(10)
 
-		if not os.path.exists(SSHTHON_DIR):
-			log("Creando directorio "+SSHTHON_DIR)
-			os.makedirs(SSHTHON_DIR)
+		self.crearDirectorioSshthon()
+		vbox = self.crearVentana()
+		self.cargarVentana(vbox)
 
+	def crearVentana(self):
 		hbox = Gtk.Box(spacing=6)
 		self.add(hbox)
 		
 		vbox_principal = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 		hbox.pack_start(vbox_principal, True, True, 0)
 
+		return vbox_principal
+
+	def cargarVentana(self, vbox_principal):
+		listaJSON = []
 		os.chdir(SSHTHON_DIR)
-		for file in glob.glob("*.json"):
+		for jsons in glob.glob("*.json"):
+			listaJSON.append(jsons)
+
+		listaJSON.sort()
+
+		for file in listaJSON:
 			hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
 			vbox_principal.add(hbox)
 			separador = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
@@ -47,6 +57,11 @@ class sshthonWindow(Gtk.Window):
 			hbox.pack_start(botonConectar, False, True, 0)
 
 			json_data.close()	
+
+	def crearDirectorioSshthon(self):
+		if not os.path.exists(SSHTHON_DIR):
+			log("Creando directorio "+SSHTHON_DIR)
+			os.makedirs(SSHTHON_DIR)		
 
 	def onClickConectar(self, widget, data):		
 		self.log("Conectando a " + data["ip"] + 
