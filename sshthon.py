@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-import os
+# -*- coding: utf-8 -*-
+import os, sys
 import glob
 import json
 
 from os.path import expanduser
 from time import gmtime, strftime
-from gi.repository import Gtk, Vte, GLib, Gdk
+from gi.repository import Gtk, Vte, GLib, Gdk, Gio, GdkPixbuf
 
 SSHTHON_DIR = expanduser("~")+"/.sshthon"
 
-class sshthonWindow(Gtk.Window):
-	def __init__(self):
-		Gtk.Window.__init__(self, title="sshThon")
+class sshthonWindow(Gtk.ApplicationWindow):
+	def __init__(self, app):
+		Gtk.Window.__init__(self, title="sshThon", application=app)
 		self.set_border_width(10)
 
 		self.crearDirectorioSshthon()
@@ -29,6 +30,8 @@ class sshthonWindow(Gtk.Window):
 
 	def cargarVentana(self, vbox_principal):
 		listaJSON = []
+		directorioRaiz = os.getcwd()
+
 		os.chdir(SSHTHON_DIR)
 		for jsons in glob.glob("*.json"):
 			listaJSON.append(jsons)
@@ -56,7 +59,9 @@ class sshthonWindow(Gtk.Window):
 			botonConectar.connect("clicked", self.onClickConectar, data)
 			hbox.pack_start(botonConectar, False, True, 0)
 
-			json_data.close()	
+			json_data.close()
+
+		os.chdir(directorioRaiz)
 
 	def crearDirectorioSshthon(self):
 		if not os.path.exists(SSHTHON_DIR):
@@ -104,8 +109,68 @@ class Terminal(Gtk.Window):
 		terminal.feed_child(comando, len(comando))
 		
 
+class SshThonAplicacion(Gtk.Application):
+	def __init__(self):
+		Gtk.Application.__init__(self)
+	
+	def do_activate(self):
+		win = sshthonWindow(self)
+		win.show_all()
+
+	def do_startup(self):
+		Gtk.Application.do_startup(self)
+
+		# Acciones menu
+		nuevoAction = Gio.SimpleAction.new("new", None)
+		nuevoAction.connect("activate", self.doClickNuevo)
+		self.add_action(nuevoAction)
+
+		salirAction = Gio.SimpleAction.new("quit", None)
+		salirAction.connect("activate", self.doClickSalir)
+		self.add_action(salirAction)
+
+		acercaDeAction = Gio.SimpleAction.new("acercaDe", None)
+		acercaDeAction.connect("activate", self.doClickAcercaDe)
+		self.add_action(acercaDeAction)
+
+		# Cargar menu
+		builder = Gtk.Builder()
+		try:
+			builder.add_from_file("menu.ui")
+		except:
+			print "Archivo menu.ui no encontrado"
+			sys.exit()
+
+		self.set_menubar(builder.get_object("menubar"))
+
+	def doClickNuevo(self, action, parameter):
+		print("Nuevo")
+
+	def doClickSalir(self, action, parameter):
+		sys.exit()
+
+	def doClickAcercaDe(self, action, parameter):
+		print("Acerca de")
+		aboutdialog = Gtk.AboutDialog()
+
+		authors = ["Sebastián González Villena "]
+
+		aboutdialog.set_program_name("sshThon")
+		aboutdialog.set_copyright("Copyright \xc2\xa9 2012 GNOME Documentation Team")
+		aboutdialog.set_authors(authors)
+		aboutdialog.set_website("http://developer.gnome.org")
+		aboutdialog.set_website_label("GNOME Developer Website")
+		aboutdialog.set_logo(GdkPixbuf.Pixbuf.new_from_file_at_size("imagenes/sshthon.png", 100, 100))
+
+		aboutdialog.connect("response", self.on_close)
+
+		aboutdialog.show()
+
+	def on_close(self, action, parameter):
+		action.destroy()
+		
+
 if __name__ == '__main__':
-	win = sshthonWindow()
-	win.connect("delete-event", Gtk.main_quit)
-	win.show_all()
-	Gtk.main()
+	app = SshThonAplicacion()
+	exit_status = app.run(sys.argv)
+	sys.exit(exit_status)
