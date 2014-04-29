@@ -8,15 +8,17 @@ from os.path import expanduser
 from time import gmtime, strftime
 from gi.repository import Gtk, Vte, GLib, Gdk, Gio, GdkPixbuf
 
+from terminal import Terminal
+
 SSHTHON_DIR = expanduser("~")+"/.sshthon"
 
 class sshthonWindow(Gtk.ApplicationWindow):
 	def __init__(self, app):
 		Gtk.Window.__init__(self, title="sshThon", application=app)
-		self.set_border_width(10)
 
 		self.crearDirectorioSshthon()
 		vbox = self.crearVentana()
+		vbox.set_border_width(10)
 		self.cargarVentana(vbox)
 
 	def crearVentana(self):
@@ -81,34 +83,6 @@ class sshthonWindow(Gtk.ApplicationWindow):
 				strftime("%d-%m-%Y %H:%M:%S", gmtime()) + 
 				":\033[0m \033[1m" + mensaje + "\033[0m")
 
-class Terminal(Gtk.Window):
-	def __init__(self, *args, **kwds):
-		Gtk.Window.__init__(self, title=args[0]["nombre"]+" ["+args[0]["usuario"]+"@"+args[0]["ip"]+"]")
-		self.set_size_request(600, 400)
-
-		comando = "ssh " + args[0]["usuario"] + "@" + args[0]["ip"] + "\n"
-
-		terminal = Vte.Terminal()
-		terminal.connect('realize', self.onRealize, comando)
-		scrolledwindow = Gtk.ScrolledWindow()
-		scrolledwindow.add(terminal)
-
-		self.add(scrolledwindow)
-
-		terminal.fork_command_full(
-			Vte.PtyFlags.DEFAULT,
-			os.environ['HOME'],
-			["/bin/sh"],
-			[],
-			GLib.SpawnFlags.DO_NOT_REAP_CHILD,
-			None,
-			None,
-			)	
-
-	def onRealize(self, terminal, comando):
-		terminal.feed_child(comando, len(comando))
-		
-
 class SshThonAplicacion(Gtk.Application):
 	def __init__(self):
 		Gtk.Application.__init__(self)
@@ -150,16 +124,15 @@ class SshThonAplicacion(Gtk.Application):
 		sys.exit()
 
 	def doClickAcercaDe(self, action, parameter):
-		print("Acerca de")
 		aboutdialog = Gtk.AboutDialog()
 
-		authors = ["Sebastián González Villena "]
+		authors = ["Sebastián González Villena <brutalchrist@gmail.com>"]
 
 		aboutdialog.set_program_name("sshThon")
-		aboutdialog.set_copyright("Copyright \xc2\xa9 2012 GNOME Documentation Team")
+		aboutdialog.set_comments("Solo otro gestor ligero de cuentas ssh :-)")
 		aboutdialog.set_authors(authors)
-		aboutdialog.set_website("http://developer.gnome.org")
-		aboutdialog.set_website_label("GNOME Developer Website")
+		aboutdialog.set_website("https://github.com/brutalchrist/sshthon")
+		aboutdialog.set_website_label("sshThon GitHub")
 		aboutdialog.set_logo(GdkPixbuf.Pixbuf.new_from_file_at_size("imagenes/sshthon.png", 100, 100))
 
 		aboutdialog.connect("response", self.on_close)
