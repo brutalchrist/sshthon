@@ -95,17 +95,21 @@ class SshThonAplicacion(Gtk.Application):
 		Gtk.Application.do_startup(self)
 
 		# Acciones menu
-		nuevoAction = Gio.SimpleAction.new("new", None)
+		nuevoAction = Gio.SimpleAction.new("nueva", None)
 		nuevoAction.connect("activate", self.doClickNuevo)
 		self.add_action(nuevoAction)
 
-		salirAction = Gio.SimpleAction.new("quit", None)
+		salirAction = Gio.SimpleAction.new("salir", None)
 		salirAction.connect("activate", self.doClickSalir)
 		self.add_action(salirAction)
 
 		acercaDeAction = Gio.SimpleAction.new("acercaDe", None)
 		acercaDeAction.connect("activate", self.doClickAcercaDe)
 		self.add_action(acercaDeAction)
+
+		gestionarAction = Gio.SimpleAction.new("gestionar", None)
+		gestionarAction.connect("activate", self.doClickGestionar)
+		self.add_action(gestionarAction)
 
 		# Cargar menu
 		builder = Gtk.Builder()
@@ -118,7 +122,8 @@ class SshThonAplicacion(Gtk.Application):
 		self.set_menubar(builder.get_object("menubar"))
 
 	def doClickNuevo(self, action, parameter):
-		print("Nuevo")
+		n = NuevaCuenta()
+		n.show_all()
 
 	def doClickSalir(self, action, parameter):
 		sys.exit()
@@ -138,10 +143,15 @@ class SshThonAplicacion(Gtk.Application):
 		aboutdialog.connect("response", self.on_close)
 
 		aboutdialog.show()
+	def doClickGestionar(self, action, parameter):
+		print("Gestionar")
 
 	def on_close(self, action, parameter):
 		action.destroy()
-		
+	
+class NuevaCuenta(Gtk.Window):
+	def __init__(self):
+		Gtk.Window.__init__(self, title="Nueva cuenta")
 
 if __name__ == '__main__':
 	app = SshThonAplicacion()
